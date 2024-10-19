@@ -91,7 +91,7 @@ dim(leontief)
 #tomamos la base de datos full personas
 #2.-----Ingresos V- #########
 # Código para cargar los datos
-esi_2017_personas <- readRDS("C:/Users/COMPC/Documentos/Phd/Investigaciones/12_consumo_en_base_al_ciclo_de_vida/Input/Base de datos/R/esi_2017_personas.rds")
+esi_2017_personas <- readRDS("esi_2017_personas.rds")
 full <- esi_2017_personas
 print(full)
 # Agrupar por grupo y calcular la media
@@ -394,7 +394,7 @@ print(I_full_grupos)
 #3.-----Consumo- C- ------------
 #estimado segun la ecuacion de consumo por grupo y valor reales iniciales (montos)
 library(readxl)
-X26092023_final_clear_gastos_ingresos_precios_2017 <- read_excel("C:/Users/COMPC/Documentos/Phd/Investigaciones/12_consumo_en_base_al_ciclo_de_vida/Input/Base de datos/Excel/26092023_final_clear_gastos_2017.xlsx", 
+X26092023_final_clear_gastos_ingresos_precios_2017 <- read_excel("26092023_final_clear_gastos_2017.xlsx",
                                                                  col_types = c("text", "numeric", "numeric", 
                                                                                "numeric", "numeric", "numeric", 
                                                                                "numeric", "numeric", "numeric", 
