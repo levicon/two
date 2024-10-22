@@ -91,11 +91,16 @@ dim(leontief)
 #tomamos la base de datos full personas
 #2.-----Ingresos V- #########
 # Código para cargar los datos
+if (file.exists("esi_2017_personas.rds")) {
+  esi_2017_personas <- readRDS("esi_2017_personas.rds")
+} else {
+  stop("El archivo 'esi_2017_personas.rds' no se encuentra en el directorio actual.")
+}
 esi_2017_personas <- readRDS("esi_2017_personas.rds")
+
 full <- esi_2017_personas
 print(full)
 # Agrupar por grupo y calcular la media
-
 IT1 <- full[, 19] #edad
 names(full[, 19])
 IT2 <- full$ing_mon_cb #monto de ingreso #302
@@ -648,6 +653,9 @@ names(c_full)
 #4.-----Matrices Miyazawa----
 library(dplyr)
 library(reshape2)
+library(matlib)
+#if (!require(expm)) install.packages("expm")
+library(expm)
 
 I <- diag(1, nrow = nrow(Apon), ncol = ncol(Apon))
 B <- t(leontief)#la matriz base 12 x 12 coeficiente de produccion
@@ -674,9 +682,6 @@ C <- c_full #   7 x 10 # la matriz ajustada a 12 x7 segun miyazawa
 #7x10, 10x10, 10x7 
 loko2 <-V %*% B %*% C
 
-library(matlib)
-#if (!require(expm)) install.packages("expm")
-library(expm)
 
 Itestloko <- diag(1, nrow(loko2), ncol(loko2)) #matriz I diagonal
 k_son <- solve(Itestloko - loko2)
@@ -714,9 +719,588 @@ tabla_latex <- xtable(k_son, digits=6)
 print(tabla_latex, comment = FALSE) # es tabla 2 del articulo
 
 ##################FIG 1 ##################
-#C:/Users/COMPC/Documentos/Phd/Investigaciones/12_consumo_en_base_al_ciclo_de_vida/Input/codigo_figura_gastos_familia.R
+library(readxl)
+X26092023_final_clear_gastos_ingresos_precios_2017 <- read_excel("C:/Users/COMPC/Documentos/Phd/Investigaciones/12_consumo_en_base_al_ciclo_de_vida/Input/Base de datos/Excel/26092023_final_clear_gastos_2017.xlsx", 
+                                                                 col_types = c("text", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric", "numeric", 
+                                                                               "numeric", "numeric"))
+
+#filtramos los datos
+G.w <- X26092023_final_clear_gastos_ingresos_precios_2017
+#nombre de base de datos
+names(G.w)
+#Creando la base de datos a utilizar
+#clear base de datos
+remoto.t1 <- G.w[,7:31]# dejando precios, share, ingreso_total y q y edad2.
+remoto.t1$Ingreso_total <- G.w$Ingreso_total #agregando ingreso total
+remoto.t1$EDAD <- G.w$EDAD #agregando EDAD
+#remoto.t1$cuadrado2 <- G.w$edad2 # agregando edad2
+#remoto.t1$q <- G.w$q #agregando q
+names(remoto.t1) # revisando las edades
+class(remoto.t1)
+library(dplyr)
+remoto.t1 <- rename(remoto.t1, w1 = "1GP", w2 = "2GP", w3="3GP", w4="4GP", w5="5GP", w6 ="6GP", w7 ="7GP", w8 ="8GP", w9="9GP", w10="10GP",w11="11GP",w12="12GP")
+remoto.t1 <- rename(remoto.t1, p1 = "1P", p2 = "2P", p3="3P", p4="4P", p5="5P", p6 ="6P", p7 ="7P", p8 ="8P", p9="9P", p10="10P",p11="11P",p12="12P")
+remoto.t1 <- rename(remoto.t1, income="Ingreso_total")
+#codigo para crear grupos por edades
+# Definir los limites de los rangos de edad
+breaks <- c(-Inf, 29, 39, 49, 59, 69, 79, Inf)
+# Etiquetas para las categor?as
+labels <- c("29s", "39s", "49s", "59s", "69s", "79s", "80+")
+# Convertir la columna de edades en categor?as
+remoto.t1$grupo <- cut(remoto.t1$EDAD, breaks = breaks, labels = labels, right = FALSE)
+print(remoto.t1)
+names(remoto.t1)
+#
+#primero se buscan datos NA, que en realidad son cero. 
+remoto.t2 <- remoto.t1
+# ?Hay algun NA en el data.frame?
+any_na <- any(is.na(remoto.t2))
+# N?mero total de NA
+total_na <- sum(is.na(remoto.t2))
+# N?mero de NA por columna
+na_por_columna <- colSums(is.na(remoto.t2))
+# Imprimir los resultados
+print(paste("?Hay NAs?:", any_na))
+print(paste("Total de NAs:", total_na))
+print("NAs por columna:")
+print(na_por_columna)
+# se tomaron los valores ceros, como un gasto cero
+#al exitir NA, se deben transformar a cero para que se pueda trabajar en ellos.
+#codigo para pasara NA a cero
+library(dplyr)
+library(tidyr)
+
+#bucle for
+for (i in 1:12){
+  columna <- paste0("w",i) # son los pesos, aqui los datos anteriores no son pesos...
+  #reemplazar NA por 0 en la columna
+  remoto.t2 <- remoto.t2 %>% 
+    mutate(!!columna := replace_na(!!sym(columna),0))
+}
+#queda remoto con los NA como valores cero.
+print(remoto.t2) # la base de datos con NA como cero desde w1 hasta w12
+#
+#vamos a tomar todos los valores que estan en clp y pasarlos a USD 884 del dia 02-01-2023
+remoto.t2[,1:12] <- remoto.t2[,1:12]/884
+#remoto.t_filtrado$grupo <- remoto.t2[,28:28]
+remoto.t_filtrado <- remoto.t2 %>%
+  select(1:12, Grupo = 28)
+#una vez finalidado se crea el ggplot clasico
+names(remoto.t_filtrado)
+# Verificar si el n?mero de filas es el mismo
+nrow(remoto.t_filtrado) == nrow(remoto.t2)
+# Verificar si los ?ndices de las filas son los mismos (por ejemplo, para las primeras 10 filas)
+all(rownames(remoto.t_filtrado)[1:10] == rownames(remoto.t2)[1:10])
+print(remoto.t_filtrado)
+boxplot(remoto.t_filtrado)
+
+#pasar del formato ancho al largo
+library(tidyr)
+library(dplyr)
+
+# Reorganizar el data frame
+datos_largos <- pivot_longer(remoto.t_filtrado, 
+                             cols = starts_with("w"), 
+                             names_to = "w", 
+                             values_to = "valores")
+
+# Ver los datos reorganizados
+print(datos_largos)
+class(datos_largos)
+datos_largos <- data.frame(datos_largos)
+datos_largos$valores <- round(datos_largos[,3:3], digits=0)
+names(datos_largos)
+print(datos_largos)
+#
+#04-10-2024 
+# Cargar librer?as
+# Load libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(patchwork)
+
+# Remove non-finite values before applying outlier removal
+datos_limpios <- datos_largos %>%
+  filter(is.finite(valores))  # Keep only finite values (no NA, NaN, Inf)
+
+# Function to filter outliers by group and category 'w'
+remove_outliers <- function(df) {
+  df %>%
+    group_by(Grupo, w) %>%
+    mutate(Q1 = quantile(valores, 0.25),
+           Q3 = quantile(valores, 0.75),
+           IQR = Q3 - Q1) %>%
+    filter(valores >= (Q1 - 1.5 * IQR) & valores <= (Q3 + 1.5 * IQR)) %>%
+    ungroup()
+}
+
+# Apply the function to the clean data
+datos_sin_outliers <- remove_outliers(datos_limpios)
+
+# Change names of categories 'w'
+datos_sin_outliers <- datos_sin_outliers %>%
+  mutate(w = recode(w,
+                    "w1" = "Food and non-alcoholic beverages",
+                    "w2" = "Alcoholic beverages, tobacco",
+                    "w3" = "Clothing and footwear",
+                    "w4" = "Housing, water, electricity, gas",
+                    "w5" = "Furniture, household goods",
+                    "w6" = "Health",
+                    "w7" = "Transport",
+                    "w8" = "Communications",
+                    "w9" = "Recreation and culture",
+                    "w10" = "Education",
+                    "w11" = "Restaurants and hotels",
+                    "w12" = "Miscellaneous goods and services"))
+
+# Boxplot by each category 'w' and age group 'Grupo' # is (a) of Figure_1
+boxplot_facetas <- ggplot(datos_sin_outliers, aes(x = Grupo, y = (valores))) +
+  geom_boxplot(outlier.shape = NA) +
+  facet_wrap(~ w, scales = "free") +
+  theme_minimal() +
+  labs(
+    title = "(a)",
+    x = "Age Group",
+    y = "Values"
+  ) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, size = 1),  # Add border to each plot
+    legend.background = element_rect(fill = "white", color = "black", size = 1),  # Box around the legend
+    legend.position = "bottom",  # Position the legend at the bottom
+    strip.text = element_text(size = 6, face = "bold"),  # Size of facet titles
+    plot.title = element_text(size = 10, face = "bold"),  # Size of main title
+    axis.title.x = element_text(size = 6),  # X-axis label size
+    axis.title.y = element_text(size = 6),  # Y-axis label size
+    axis.text.x = element_text(size = 6, angle = 45, hjust = 1),  # X-axis text size and angle
+    axis.text.y = element_text(size = 6)  # Y-axis text size
+  )
+
+# Bar chart to show the number of observations by age group
+conteo_observaciones <- datos_sin_outliers %>%
+  count(Grupo)
+#is (b) Figure_1
+grafico_barras <- ggplot(conteo_observaciones, aes(x = Grupo, y = n)) + 
+  geom_bar(stat = "identity", fill = "darkgray") +
+  theme_minimal() +
+  labs(
+    title = "(b)",
+    x = "Age Group",
+    y = "Number of Observations"
+  ) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, size = 1),  # Add border to each plot
+    legend.background = element_rect(fill = "white", color = "black", size = 1),  # Box around the legend
+    legend.position = "bottom",  # Position the legend at the bottom
+    strip.text = element_text(size = 6, face = "bold"),  # Size of facet titles
+    plot.title = element_text(size = 10, face = "bold"),  # Size of main title
+    axis.title.x = element_text(size = 6),  # X-axis label size
+    axis.title.y = element_text(size = 6),  # Y-axis label size
+    axis.text.x = element_text(size = 6, angle = 45, hjust = 1),  # X-axis text size and angle
+    axis.text.y = element_text(size = 6)  # Y-axis text size
+  )
+
+# Scatter plot to analyze a specific category 'w10'
+datos_w10 <- datos_sin_outliers %>% filter(w == "Education")
+# is (c) - Figure_1
+grafico_dispersion <- ggplot(datos_w10, aes(x = Grupo, y = valores)) +
+  geom_jitter(width = 0.05, height = 0.5, size = 0.8, color = "darkgray", alpha = 0.6) +  # Smaller points
+  geom_boxplot(alpha = 0.2, fill ="darkgray") +  # Adjust the boxplot transparency
+  theme_minimal() +
+  labs(
+    title = "(c)",
+    x = "Age Group",
+    y = "USD"
+  ) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, size = 1),  # Add border to each plot
+    legend.background = element_rect(fill = "white", color = "black", size = 1),  # Box around the legend
+    legend.position = "bottom",  # Position the legend at the bottom
+    strip.text = element_text(size = 6, face = "bold"),  # Size of facet titles
+    plot.title = element_text(size = 10, face = "bold"),  # Size of main title
+    axis.title.x = element_text(size = 6),  # X-axis label size
+    axis.title.y = element_text(size = 6),  # Y-axis label size
+    axis.text.x = element_text(size = 6, angle = 45, hjust = 1),  # X-axis text size and angle
+    axis.text.y = element_text(size = 6)  # Y-axis text size
+  )
+
+library(patchwork)
+# Combine the plots using patchwork
+figura_combinada <- boxplot_facetas / (grafico_barras | grafico_dispersion ) + 
+  plot_layout(heights = c(3, 1))  # Adjust height, the first plot will be larger
+
+# Save the combined plot with a width of 2244 pixels
+ggsave("Figure_1.png", plot = figura_combinada, width = 7.48, height = 8, dpi = 300)
+
+# Show the combined figure
+print(figura_combinada)
+
+#2244 pixels full width
+# the end
+
 ##################TAB 1 ##################
-#esta en el archivo tabla_1.r
+####################funcion para crear las 12 q y llevarla al dataframe.
+library(tidyr)
+
+all_q <- function(qf, num_goods=12){
+  # verificar si todas las columnas requeridas existen en ql
+  required_columns <- c(paste0("w",1:num_goods),paste0("p",1:num_goods)) 
+  if (!all(required_columns %in% names(qf))){
+    stop("el dataframe no contiene todas las columnas requeridas: ", paste(required_columns, collapse=","))
+  }
+  for (i in 1:num_goods){
+    qf[[paste0("m_q",i)]] <- qf[[paste0("w",i)]]/qf[[paste0("p",i)]]
+  }     
+  # the results list
+  return(qf)
+}
+remoto.t1 <- all_q(remoto.t1)
+#################ols de los 12 commoditties
+run_cs_aids_models <- function(df) {
+  # Verificar si todas las columnas requeridas existen en df
+  required_columns <- c(paste0("m_q",1:12), "EDAD", "income")
+  if (!all(required_columns %in% names(df))) {
+    stop("El dataframe no contiene todas las columnas requeridas: ", paste(required_columns, collapse=", "))
+  }
+  results <- list() # Initialize an empty list to store results
+  # Linearize the model for each good's budget share and all prices
+  for (i in 1:12) {
+    df[[paste0("m_q", i)]] <- df[[paste0("m_q", i)]]
+  }
+  for (i in 1:12) {
+    # Create a formula for the regression
+    formula <- as.formula(paste0("m_q",i, " ~ EDAD + income"))
+    
+    # Regression for each good
+    model <- lm(formula, data = df)
+    # Store the model in the results list
+    results[[paste0("model_q",i)]] <- model
+  }
+  return(results)
+}
+
+results <- run_cs_aids_models(remoto.t1)
+
+#para eliminar los datos na y ceros.
+#data[data <= 0] <- 1e-6
+
+#3er paso, se filtra para cada edad
+#filtrando
+filtrar <- function(base, columna, edadmax, edadmin) {
+  if (is.numeric(base[,columna])) {
+    return( base[base[,columna]<=edadmax & base[,columna]>=edadmin, ])
+  } else {
+    return(error)
+  }
+}
+names(remoto.t1)
+remoto.t1 <- as.data.frame(remoto.t1)
+#Filtrando por rango de edades
+
+gw_29 <- filtrar(base=remoto.t1, columna=27:27, edadmax = 29, edadmin = 15)
+gw_30_39 <- filtrar(base=remoto.t1 , columna=27:27, edadmax = 39, edadmin = 30)
+gw_40_49 <- filtrar(base=remoto.t1, columna=27:27, edadmax = 49, edadmin = 40)
+gw_50_59 <- filtrar(base=remoto.t1 , columna=27:27, edadmax = 59, edadmin = 50)
+gw_60_69 <- filtrar(base=remoto.t1 , columna=27:27, edadmax = 69, edadmin = 60)
+gw_70_79 <- filtrar(base=remoto.t1 , columna=27:27, edadmax=79, edadmin=70)
+gw_80_more <- filtrar(base=remoto.t1 , columna=27:27, edadmax=Inf, edadmin=80)
+gw_average <- filtrar(base=remoto.t1 , columna=27:27, edadmax = Inf, edadmin =15)
+#relizamos los ols por grupo
+results1 <- run_cs_aids_models(gw_29)
+results2 <- run_cs_aids_models(gw_30_39)
+results3 <- run_cs_aids_models(gw_40_49)
+results4 <- run_cs_aids_models(gw_50_59)
+results5 <- run_cs_aids_models(gw_60_69)
+results6 <- run_cs_aids_models(gw_70_79)
+results7 <- run_cs_aids_models(gw_80_more)
+results_average <- run_cs_aids_models(gw_average)
+
+summary(results1$model_q1)
+summary(results2$model_q2)
+summary(results2$model_q3)
+summary(results2$model_q4)
+summary(results2$model_q5)
+summary(results2$model_q6)
+summary(results2$model_q7)
+summary(results2$model_q8)
+summary(results2$model_q9)
+summary(results2$model_q10)
+summary(results2$model_q11)
+summary(results2$model_q12)
+#Creaci?n de un Data Frame de Resumen
+#OLS para cada categoria para calculo de BP
+#
+results <- run_cs_aids_models(remoto.t1)
+
+
+#modelo BP test
+library(lmtest)
+BP_models <- function(bp) {
+  results <- list() # Initialize an empty list to store BP test results
+  
+  # Run the Breusch-Pagan test on each regression model
+  for (i in 1:12) {
+    # Assuming each model is stored as "model_q1", "model_q2", etc. in the bp list
+    model <- bp[[paste0("model_q", i)]]
+    if (!is.null(model)) {  # Check if the model exists
+      bp_test <- bptest(model)
+      results[[paste0("bp_test_q", i)]] <- bp_test
+    }
+  }
+  
+  return(results)
+}
+#Puedes crear un data frame en R que resuma esta informaci?n. Por ejemplo: 
+# List of all results
+#all_results <- list(results1, results2, results3 , results4,results5, results6)
+
+# Apply BP_models function to each set of results
+all_BP <- lapply(results, BP_models)
+
+# Now, all_BP is a list where each element contains the BP test results for each dataset
+
+# Apply BP_models function to the results
+bp_results <- BP_models(results)  # Assuming 'results' is your list of regression models for the single group
+
+# Initialize an empty data frame
+summary_table <- data.frame(Category = character(),
+                            BP_Value = numeric(),
+                            Degrees_of_Freedom = numeric(),
+                            P_Value = numeric(),
+                            stringsAsFactors = FALSE)
+
+# Loop through each category to populate the summary table
+for (j in 1:length(bp_results)) {  # for each category
+  test_result <- bp_results[[j]]
+  
+  # Extracting the test details
+  bp_value <- test_result$statistic
+  df <- test_result$parameter
+  p_value <- test_result$p.value
+  
+  # Adding to the summary table
+  summary_table <- rbind(summary_table, c(paste("Category", j), bp_value, df, p_value))
+}
+
+# Renaming the columns for clarity
+names(summary_table) <- c("Category", "BP_Value", "Degrees_of_Freedom", "P_Value")
+print(summary_table)
+summary_table$P_value <- as.numeric(summary_table$P_Value)
+summary_table$P_value <- round(summary_table$P_value,3)
+# Convert 'Category' to a factor for plotting
+summary_table <- summary_table %>%
+  mutate(Decision = ifelse(P_value <= 0.05, "Reject", "Do Not Reject"))
+summary_table$Category <- as.factor(summary_table$Category)
+print(summary_table)
+
+# Crear una nueva base de datos con solo las columnas `Category` y `Decision`
+BP_easy <- summary_table %>%
+  select(Category, Decision)
+
+print(BP_easy)
+names(BP_easy)
+# Supongamos que la primera columna de BP_easy contiene los nombres de las categorías que deseas convertir en nombres de columnas
+BP_easy <- BP_easy %>%
+  # Convertir la primera columna en nombres de columnas
+  pivot_wider(names_from = Category, values_from = Decision)
+
+# Renombrar las columnas resultantes
+BP_easy <- BP_easy %>%
+  rename(
+    "Food and non-alcoholic beverages" = `Category 1`,
+    "Alcoholic beverages, tobacco" = `Category 2`,
+    "Clothing and footwear" = `Category 3`,
+    "Housing, water, electricity, gas" = `Category 4`,
+    "Furniture, household goods" = `Category 5`,
+    "Health" = `Category 6`,
+    "Transport" = `Category 7`,
+    "Communications" = `Category 8`,
+    "Recreation and culture" = `Category 9`,
+    "Education" = `Category 10`,
+    "Restaurants and hotels" = `Category 11`,
+    "Miscellaneous goods and services" = `Category 12`
+  )
+
+# Mostrar la tabla resultante
+print(BP_easy)
+BP_easy <- as.data.frame(BP_easy)
+
+#-end-BP-
+
+# Definir los l?mites de los rangos de edad
+breaks <- c(-Inf, 29, 39, 49, 59, 69, 79, Inf)
+
+# Etiquetas para las categor?as
+labels <- c("29s", "39s", "49s", "59s", "69s", "79s", "80+")
+
+# Convertir la columna de edades en categor?as
+remoto.t1$grupo <- cut(remoto.t1$EDAD, breaks = breaks, labels = labels, right = FALSE)
+
+# Ver los datos
+head(remoto.t1)
+#resultados de tabla 1
+summary(remoto.t1)
+#
+#
+calculate_stats_and_differences <- function(df, num_groups=7, num_categories=12) {
+  # Calculando la media general para cada categor?a
+  category_means <- sapply(paste0("w", 1:num_categories), function(w) {
+    mean(df[[w]], na.rm = TRUE)
+  })
+  
+  # Crear un data.frame para almacenar los resultados
+  results <- data.frame(Group = character(),
+                        Category = character(),
+                        Mean = numeric(),
+                        Variance = numeric(),
+                        Difference = numeric(),
+                        stringsAsFactors = FALSE)
+  
+  # Para cada grupo y categor?a, calcular la media, la varianza y la diferencia
+  for (group in unique(df$grupo)) {
+    for (category in 1:num_categories) {
+      w_col <- paste0("w", category)
+      group_data <- df[df$grupo == group, w_col, drop = FALSE]
+      group_mean <- mean(group_data[[w_col]], na.rm = TRUE)
+      group_variance <- var(group_data[[w_col]], na.rm = TRUE)
+      difference <- group_mean - category_means[category]
+      
+      # Agregar al data.frame de resultados
+      results <- rbind(results, data.frame(Group = group, 
+                                           Category = category, 
+                                           Mean = group_mean,
+                                           Variance = group_variance,
+                                           Difference = difference))
+    }
+  }
+  
+  return(results)
+}
+
+
+# Asumiendo que remoto.t1 es tu dataframe con las columnas requeridas
+stats_results <- calculate_stats_and_differences(remoto.t1)
+stats_results$Difference <- round(stats_results$Difference/872, digits=0) #change to USD. 
+stats_results$Variance <- round(stats_results$Variance/872, digits=0) #change to USD. 
+ 
+
+print(stats_results)
+
+# Asumiendo que 'stats_results' es tu data.frame con los resultados
+library(dplyr)
+
+resumen <- stats_results %>%
+  group_by(Group, Category) %>%
+  summarise(
+    Mean = mean(Mean, na.rm = TRUE),
+    Variance = mean(Variance, na.rm = TRUE),
+    Difference = mean(Difference, na.rm = TRUE),
+    .groups = "drop"  # Desagrupa los resultados
+  )
+print(resumen)
+
+#con la base de datos de resumen, la paso a otra base de datos que se utiliza para la tabla 2
+tabla2 <- resumen
+#se continua con la tabla 1
+resumen$Mean <- NULL
+resumen$Variance <- NULL
+print(resumen)
+
+
+table_1 <-t(resumen)
+print(table_1)
+
+#install.packages("magrittr")
+library(magrittr)
+#install.packages("knitr")
+library(knitr)
+#install.packages("kableExtra")
+library(kableExtra)
+
+kable(resumen, caption = "Resumen Estad?stico por Grupo y Categor?a", format = "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+library(ggplot2)
+#Es un grafico de barras. 
+ggplot(resumen, aes(x = Category, y = Difference, fill = Group)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  labs(title = "Diferencias por Grupo y Categor?a", x = "Categor?a", y = "Diferencia") +
+  theme_minimal()
+
+# Crear una tabla con kable en formato LaTeX
+tabla_latex <- kable(resumen, caption = "Resumen Estad?stico por Grupo y Categor?a", format = "latex", booktabs = TRUE) %>%
+  kable_styling(latex_options = c("striped", "scale_down"))
+
+# Ver la tabla
+tabla_latex #ACA SE CREA EL CODIGO CON LOS DATOS PARA LATEX TABLA 1.
+
+# Asumiendo que tus datos est?n en un data.frame llamado 'datos'
+# datos <- data.frame(Group = ..., Category = ..., Difference = ...)
+
+resumen <- as.data.frame(resumen)
+# Asigna nombres de columnas; ajusta seg?n el contenido de tu matriz
+names(resumen) <- c("Group", "Category", "Difference")
+
+# Transformar datos a formato ancho
+datos_wide <-resumen %>%
+  pivot_wider(names_from = Category, values_from = Difference, names_prefix = "")
+
+# Ahora 'datos_wide' tiene los grupos en la primera columna y las diferencias de las 12 categor?as en las siguientes columnas
+head(datos_wide)
+class(datos_wide)
+datos_wide <- as.data.frame(datos_wide)
+print(datos_wide)
+
+#agrega el test BP
+
+datos_wide <- rbind(summary_table[,6:6], datos_wide)
+
+datos <- rbind(datos, nueva_fila)
+
+# Cambiar nombres de columnas
+datos_wide <- datos_wide %>%
+  rename(
+    "Food and non-alcoholic beverages" = `1`,
+    "Alcoholic beverages, tobacco" = `2`,
+    "Clothing and footwear" = `3`,
+    "Housing, water, electricity, gas" = `4`,
+    "Furniture, household goods" = `5`,
+    "Health" = `6`,
+    "Transport" = `7`,
+    "Communications" = `8`,
+    "Recreation and culture" = `9`,
+    "Education" = `10`,
+    "Restaurants and hotels" = `11`,
+    "Miscellaneous goods and services" = `12`
+  )
+print(datos_wide)
+# Convertir todas las columnas de datos_wide a character para alinear los tipos
+datos_wide <- datos_wide %>%
+  mutate(across(everything(), as.character))
+# Combinar datos_wide y BP_easy
+tabla_2 <- bind_rows(datos_wide, BP_easy)
+# Mostrar la tabla resultante
+print(tabla_2)
+# Suponiendo que 'datos_wide' es tu data.frame
+tabla_latex <- kable(tabla_2, format = "latex", booktabs = TRUE, caption = "Difference in consumption by age and error term analysis (BP)")
+# Opcional: a?adir estilos con kableExtra
+tabla_latex <- tabla_latex %>%
+  kable_styling(latex_options = c("striped", "scale_down"))
+# Mostrar la tabla en la consola
+print(tabla_latex) #SIMILAR A LO ANTERIOR LATEX TABLA 1.
+
 ##################TAB 2 ##################
 ###--- Creando tabla 2 ---###
 # Instalar el paquete xtable si a?n no est? instalado
@@ -724,9 +1308,9 @@ print(tabla_latex, comment = FALSE) # es tabla 2 del articulo
 # Cargar el paquete xtable
 library(xtable)
 # Convertir el dataframe a una tabla de LaTeX con xtable
-tabla_latex <- xtable(k_son, digits=6)
+table_2 <- xtable(k_son, digits=6)
 # Imprimir la tabla en formato LaTeX
-print(tabla_latex, comment = FALSE) # es tabla 2 del articulo
+print(table_2, comment = FALSE) # es tabla 2 del articulo
 ##################FIG 2 ---------
 library(tibble)
 library(ggplot2)
@@ -801,13 +1385,13 @@ print(Grupo_total_linea)
 
 simple_analisis <- Grupo_total_linea / dif_simple 
 simple_analisis
-
+Figure_2 <- simple_analisis
 # Save the combined plot with a width of 2244 pixels
-ggsave("Method/Imagenes/imagenes_final_ingles/Figure_2.png", plot = simple_analisis, width=7.48, height=9, dpi =300 )
+ggsave("Figure_2.png", plot = simple_analisis, width=7.48, height=9, dpi =300 )
 
 ##################FIG 3 ----
-#Esta en python
-#C:\Users\COMPC\Documentos\Phd\Investigaciones\12_consumo_en_base_al_ciclo_de_vida\Method\R-Python
+#Python
+#\grafo_3_.py
 ##################FIG 4 ####
 library(ggplot2)
 library(reshape2)
@@ -849,9 +1433,21 @@ Miyazawa_melt$Var2 <- recode(Miyazawa_melt$Var2,
                                 "SEN" = "Business Services",
                                 "SPN" = "Personal Services",
                                 "ADM" = "Public Admin")
+# Crear un dataframe para las posiciones de las etiquetas de categorías (opcional si necesitas controlarlo)
+nombres_funny <- Miyazawa_melt %>%
+  group_by(Var2) %>%
+  filter(Var1 == "80+")  # Tomar los valores correspondientes al año "80+" para etiquetar al final de la línea
+
+# Crear el gráfico
 produc <- ggplot(Miyazawa_melt, aes(x = Var1, y = value, group = Var2, color = Var2)) +
-  geom_line(size = 1.5) +  # Ajustar el grosor de las líneas
-  geom_point() +
+  geom_line(size = 0.5) +  # Ajustar el grosor de las líneas
+  geom_point(size = 1) +
+  geom_text(data = nombres_funny, aes(label = Var2), 
+            hjust = 1,  # Ajustar la posición horizontal para colocar los nombres a la derecha de los puntos
+            vjust = -2.5,   # Posición vertical cerca del valor
+            size = 5,    # Tamaño del texto de las etiquetas
+            color = "blue",  # Color de las etiquetas de nombres
+            fontface = "bold") +  # Corregido: "bol" a "bold"
   theme_minimal() +
   labs(title = "", 
        x = "", 
@@ -865,14 +1461,15 @@ produc <- ggplot(Miyazawa_melt, aes(x = Var1, y = value, group = Var2, color = V
     legend.position = "none",  # Eliminar la leyenda
     panel.background = element_rect(fill = "white", color = NA),  # Fondo blanco para el panel
     plot.background = element_rect(fill = "white", color = NA),    # Fondo blanco para todo el gráfico
-    strip.text = element_text(size = 16)  # Aumentar el tamaño de las etiquetas de los facetas (Var2)
+    strip.text = element_blank()  # Eliminar las etiquetas de las facetas
   ) +
   facet_wrap(~ Var2, scales = "fixed", nrow = 5, ncol = 2)  # Crear cajas individuales para cada Var2
 
-produc
+# Mostrar el gráfico final
+print(produc)
 
 # Guardar el gráfico como archivo PNG
-ggsave("Method/Imagenes/imagenes_final_ingles/Figure_4.png", plot = produc, width = 7.48, height = 15, dpi = 300)
+ggsave("Figure_4.png", plot = produc, width = 7.48, height = 15, dpi = 300)
 #2. Similarly,
 # pagina 275 de Miller&Blair 
 #con estilo miyazawa consumo
@@ -1140,7 +1737,7 @@ f.5 <- (Grupo_total_proyec / Grupo_total_proyec_l) #figura 5  Interrelaciones to
 print(f.5)
 
 # Save the combined plot with a width of 2244 pixels
-ggsave("Method/Imagenes/imagenes_final_ingles/Figure_5.png", plot = f.5, width = 7.48, height = 8, dpi = 300)
+ggsave("Figure_5.png", plot = f.5, width = 7.48, height = 8, dpi = 300)
 
 #-----     fin     -----#
 ##################FIG 6 ----
@@ -1395,11 +1992,17 @@ f.6 <- Grupo_total_proyec_nk2 / Grupo_total_proyec_nk3 #figura 5  Interrelacione
 print(f.6)
 
 # Save the combined plot with a width of 2244 pixels
-ggsave("Method/Imagenes/imagenes_final_ingles/Figure_6.png", plot=f.6, width=7.48, height = 9, dpi=300)
+ggsave("Figure_6.png", plot=f.6, width=7.48, height = 9, dpi=300)
 
 #-----     fin
 
 ##################FIG 7 ---------
+#python grafo_7.py
+##################FIG 8 ------
+library(ggplot2)
+library(dplyr)
+library(reshape2)
+
 dim(k_proyec[[i]])
 class(k_proyec)
 dim(V)
@@ -1475,99 +2078,15 @@ ggplot(df, aes(x = Periodo, y = sumcol_proy, group = grupo, color = grupo)) +
        y = "Suma de sumcol_proy",
        color = "Grupo") +
   theme_minimal()
-
-
-#------GRAFO FIGURA 7-----#####
-#esta en python, el codigo y la imagen en la carpeta.
-##################FIG 8 ------
 #multiingreso proyectado a 15 años por cambios en el consumo
 multi_ingreso_proy[[15]]
-library(reshape2)
-library(ggplot2)
-multi_ingreso_15 <- melt(multi_ingreso_proy[[15]])
+# Eliminar las columnas 2 y 8 del dataframe
+multi_ingreso_proy_10 <- multi_ingreso_proy[[15]][, -c(2, 8)]
+
+multi_ingreso_15 <- melt(multi_ingreso_proy_10)
 print(multi_ingreso_15)
-
-kvbm_15 <- ggplot(multi_ingreso_15, aes(y = Var1, x = Var2, fill = value)) +
-  geom_tile() +
-  scale_fill_gradient(low = "white", high = "#666f88") +
-  geom_text(aes(label = round(value, 5)), vjust = 1) +
-  theme_minimal() +
-  labs(x = "", y = "", fill = "") +
-  theme(axis.text.x = element_text(angle = 0, hjust = 1),
-        panel.border = element_rect(colour = "black", fill=NA, size=1))+
-  scale_x_discrete(position = "top")  # Mover las etiquetas del eje X a la parte superior# A?ade el recuadro
-#plot.background = element_rect(colour = "black", fill=NA)) # Opcional: Cambia el fondo
-
-# Graficar
-plot(kvbm_15)
-
-#solo la diferencia
-multi_ingreso_proy_15 <- multi_ingreso_proy[[15]][,-c(2,8)]
-kvbm_15_dif <- (multi_ingreso_proy_15)-KVB
-print(kvbm_15_dif)
-kvbm_15_dif <- kvbm_15_dif*10^5 
-
-kvbm_15_dif_melt <- melt(kvbm_15_dif)
-kvbm_15_dif_map <- ggplot(kvbm_15_dif_melt, aes(y = Var1, x = Var2, fill = value)) +
-  geom_tile(color = "black") +  # Añadir bordes negros a las celdas
-  scale_fill_gradient(low = "white", high = "#98F5FF", name = "Differences") +  # Añadir nombre a la leyenda
-  geom_text(aes(label = round(value, 6)), vjust = 1, color = "black", size = 4) +  # Ajustar tamaño y color del texto
-  theme_minimal() +
-  labs(x = "", y = "", fill = "") +
-  theme(
-    axis.text.x = element_text(angle = 0, hjust = 0.5, face = "bold", size = 12),  # Centrar texto del eje X y agrandarlo
-    axis.text.y = element_text(face = "bold", size = 12),  # Agrandar texto del eje Y
-    panel.border = element_rect(colour = "black", fill = NA, size = 1),  # Añadir borde negro al gráfico
-    plot.background = element_rect(fill = "white", color = "black", size = 1),  # Añadir fondo blanco y borde negro
-    panel.grid.major = element_blank(),  # Eliminar las líneas de cuadrícula
-    panel.grid.minor = element_blank()  # Eliminar las líneas de cuadrícula menores
-  ) +
-  scale_x_discrete(position = "top")  # Mover las etiquetas del eje X a la parte superior
-
-# Mostrar el gráfico
-print(kvbm_15_dif_map)
-
-# Graficar#### es la figura 8
-plot(kvbm_15_dif_map)
-#
-kvbm_15_dif  <- melt(kvbm_15_dif )
-
-# Crear el gráfico de líneas con cajas individuales para cada categoría, sin etiqueta interior y con fondo blanco
-produc_proyectada <- ggplot(kvbm_15_dif , aes(x = Var1, y = value, group = Var2, color = Var2)) +
-  geom_line() +
-  geom_point() +
-  theme_minimal() +
-  labs(title = "", 
-       x = "", 
-       y = "", 
-       color = "Categoría") +
-  theme(
-    axis.text.x = element_text(angle = 90, hjust = 1),  # Rotar las etiquetas del eje x
-    legend.position = "none",  # Eliminar la leyenda
-    panel.background = element_rect(fill = "white", color = NA),  # Fondo blanco para el panel
-    plot.background = element_rect(fill = "white", color = NA)    # Fondo blanco para todo el gráfico
-  ) +
-  facet_wrap(~ Var2, scales =  "fixed", nrow = 2, ncol = 5)  # Crear cajas individuales para cada Var2
-
-produc_proyectada
-
 ##
-
-kvbm_15_dif_melt <- melt(kvbm_15_dif*10^6)
-
-#KVB$Var2                   <- recode(KVB$Var2,
-#                                     "ASP" = "AgroFishing",
-#                                     "IMN" = "Manufacturing",
-#                                     "EGA" = "Energy",
-#                                     "CON" = "Construction",
-#                                     "CHR" = "Commerce",
-#                                     "TCI" = "Transport",
-#                                     "SIV" = "RealEstate",
-#                                     "SEN" = "BusinessServices",
-#                                     "SPN" = "PersonalServices",
-#                                     "ADM" = "PublicAdmin")
-
-# Recode the 'Var2' column in kvbm_15_dif
+kvbm_15_dif_melt <- multi_ingreso_15
 
 kvbm_15_dif_melt$Var2 <- recode(kvbm_15_dif_melt$Var2,
                            "ASP" = "AgroFishing",
@@ -1581,16 +2100,11 @@ kvbm_15_dif_melt$Var2 <- recode(kvbm_15_dif_melt$Var2,
                            "SPN" = "Personal Services",
                            "ADM" = "Public Admin")
 
-# Añadir la columna 'Fuente' para identificar los datos base y proyectados
-#Miyazawa_melt$Fuente <- 'Initial'
-kvbm_15_dif_melt$Fuente <- 'Projected'
+print(kvbm_15_dif_melt)
+dim(kvbm_15_dif_melt)
 
-# Combinar ambas bases de datos en un solo data.frame
-#datos_combinados <- rbind(Miyazawa_melt, kvbm_15_dif_melt)
-
-# Crear el gráfico de líneas con ggplot
-# Multiplicar los valores pequeños por 10^6
-kvbm_15_dif_melt$value <- kvbm_15_dif_melt$value * 10^6
+kvbm_15_dif_melt$value <- kvbm_15_dif_melt$value*10^2
+print(kvbm_15_dif_melt)
 
 # Crear un dataframe de anotaciones para cada faceta
 anotaciones <- data.frame(
@@ -1598,8 +2112,8 @@ anotaciones <- data.frame(
            "Transport", "RealEstate", "BusinessServices", "PersonalServices", "PublicAdmin"),
   label = c("AgroFishing", "Manufacturing", "Energy", "Construction", "Commerce", 
             "Transport", "Real Estate", "Business Services", "Personal Services", "Public Admin"),
-  x = c("49s", "49s", "49s", "49s", "49s", "49s", "49s", "49s", "49s", "49s"),  # Coordenadas X
-  y = c(1, 1.1, 1.05, 1.02, 1.03, 1.08, 1.04, 1.09, 1.01, 1.07)  # Coordenadas Y
+  x = c("49s", "49s", "49s", "49s", "49s", "59s", "49s", "49s", "49s", "49s"),  # Coordenadas X
+  y = c(1, 1.1, 1.05, 1.02, 1.03, 1.12, 1.04, 1.09, 1.01, 1.07)  # Coordenadas Y
 )
 
 # Crear el gráfico de líneas con ggplot
@@ -1607,14 +2121,8 @@ anotaciones <- data.frame(
 nombres_finales <- kvbm_15_dif_melt %>%
   group_by(Var2) %>%
   filter(Var1 == "80+")  # Tomar los valores correspondientes al año "80+" para etiquetar al final de la línea
-
-# Crear un dataframe para las posiciones de las etiquetas de categorías (opcional si necesitas controlarlo)
-nombres_finales <- kvbm_15_dif_melt %>%
-  group_by(Var2) %>%
-  filter(Var1 == "80+")  # Tomar los valores correspondientes al año "80+" para etiquetar al final de la línea
-
 # Crear el gráfico de líneas con etiquetas para los valores y nombres de categorías
-produc.final <- ggplot(kvbm_15_dif_melt, aes(x = Var1, y = value, color = Fuente, group = interaction(Var2, Fuente))) +
+produc.final <- ggplot(kvbm_15_dif_melt, aes(x = Var1, y = value, color =Var2, group = interaction(Var2))) +
   
   # Añadir las líneas para ambas bases de datos
   geom_line(size = 0.5) +
@@ -1622,16 +2130,16 @@ produc.final <- ggplot(kvbm_15_dif_melt, aes(x = Var1, y = value, color = Fuente
   # Añadir los puntos a las líneas
   geom_point(size = 1) +
   
-# Agregar etiquetas para los valores numéricos cerca de los puntos
-#  geom_text(aes(label = round(value, 2)), 
-#            vjust = 0.5,  # Ajustar la posición vertical para que las etiquetas queden justo encima de los puntos
-#            size = 3,      # Tamaño del texto
-#            color = "black") +  # Color de las etiquetas
+  # Agregar etiquetas para los valores numéricos cerca de los puntos
+  #  geom_text(aes(label = round(value, 2)), 
+  #            vjust = 0.5,  # Ajustar la posición vertical para que las etiquetas queden justo encima de los puntos
+  #            size = 3,      # Tamaño del texto
+  #            color = "black") +  # Color de las etiquetas
   
   # Agregar etiquetas para los nombres de las categorías"
   geom_text(data = nombres_finales, aes(label = Var2), 
             hjust = 1,  # Ajustar la posición horizontal para colocar los nombres a la derecha de los puntos
-            vjust = -1.2,   # Posición vertical cerca del valor
+            vjust = -2.5,   # Posición vertical cerca del valor
             size = 2.5,    # Tamaño del texto de las etiquetas
             color = "blue",  # Color de las etiquetas de nombres
             fontface = "bold") +  # Estilo de fuente para los nombres
@@ -1640,7 +2148,7 @@ produc.final <- ggplot(kvbm_15_dif_melt, aes(x = Var1, y = value, color = Fuente
   theme_minimal() +
   
   # Etiqueta en el eje Y
-  labs(x = "", y = "Value (scaled by 10^6)", color = "Share") +
+  labs(x = "", y = "Value (scaled by 10^2)", color = "Share") +
   
   # Personalización del tema
   theme(
@@ -1661,36 +2169,17 @@ produc.final <- ggplot(kvbm_15_dif_melt, aes(x = Var1, y = value, color = Fuente
 # Mostrar el gráfico final
 print(produc.final)
 
-ggsave("Method/Imagenes/imagenes_final_ingles/Figure_8.png", plot=produc.final, width=7.48, height = 4, dpi=300)
 
+ggsave("Figure_8.png", plot=produc.final, width=7.48, height = 4, dpi=300)
 
-#-----------Anexos---------####
-#-------A-1-----------####
-library(xtable)
-# Convertir ----------     LaTeX con xtable     ------#
-#1 cuadro 15 de disminucion 
-#pasar a data.frame
-k_proyec_l_latex <- as.data.frame(k_proyec_l[[15]])
-k_latex_proy_l <- xtable(k_proyec_l_latex, digits =5)
-# Imprimir el c?digo LaTeX del dataframe
-print(k_latex_proy_l, digits=5, include.rownames = TRUE, floating = FALSE)
-
-#-------A-2------diferencia low change #####
-#desarrollado para el año 1
-diferencia_k_pro_l_kson <- k_proyec_l[[1]]-k_son
-print(diferencia_k_pro_l_kson)
-#-------A-3------reduccion para visibilidad #### 
-dif_dis_l <- diferencia_k_pro_l_kson/(10^(-3))
-diferencia_k_pro_l_kson_latex <- xtable(dif_dis_l, digits=5)
-print(diferencia_k_pro_l_kson_latex)
-#-------A-4------proyeccion año 15####
-diferencia_k_pro_l_kson_15 <- k_proyec_l[[15]]-k_son
-print(diferencia_k_pro_l_kson_15)
-#-------A-5------ diferencia (1-15) ---####
-dif_dis_l_15 <- diferencia_k_pro_l_kson_15/(10^(-3))
-diferencia_k_pro_l_kson_latex_15 <- xtable(dif_dis_l_15, digits=5)
-print(diferencia_k_pro_l_kson_latex_15)
-#--------A-6-------Diferencia de aumento 15% -----#
-k_p_hi_1 <- k_proyec[[1]]-k_son
-k_p_hi_15 <- k_proyec[[15]]-k_son
-print(k_p_hi_15)
+#----ifelse all working, all Figure Run----#### 
+print(figura_combinada) #Figure_1
+print(tabla_latex) # table_1
+print(table_2, comment = FALSE) # is table 2
+print(Figure_2)
+#Python \grafo_3_.py #figure_3
+print(produc) #figure_4
+print(f.5) #figure_5
+print(f.6) #figure_6
+#python grafo_7.py #figure_7
+print(produc.final) #figure_8

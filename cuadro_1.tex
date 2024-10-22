@@ -1,0 +1,119 @@
+\documentclass[10pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\begin{document}
+\begin{table}
+\centering
+\caption{Tu T?tulo de Tabla}
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+\begin{tabular}[t]{llr}
+\toprule
+Group & Category & Difference\\
+\midrule
+\cellcolor{gray!10}{g1} & \cellcolor{gray!10}{Food and non-alcoholic beverages} & \cellcolor{gray!10}{-78}\\
+g1 & Alcoholic beverages, tobacco & 0\\
+\cellcolor{gray!10}{g1} & \cellcolor{gray!10}{Clothing and footwear} & \cellcolor{gray!10}{-3}\\
+g1 & Housing, water, electricity, gas & -114\\
+\cellcolor{gray!10}{g1} & \cellcolor{gray!10}{Furniture, household goods} & \cellcolor{gray!10}{-34}\\
+\addlinespace
+g1 & Health & -47\\
+\cellcolor{gray!10}{g1} & \cellcolor{gray!10}{Transport} & \cellcolor{gray!10}{-48}\\
+g1 & Communications & -11\\
+\cellcolor{gray!10}{g1} & \cellcolor{gray!10}{Recreation and culture} & \cellcolor{gray!10}{-12}\\
+g1 & Education & 13\\
+\addlinespace
+\cellcolor{gray!10}{g1} & \cellcolor{gray!10}{Restaurants and hotels} & \cellcolor{gray!10}{-11}\\
+g1 & Miscellaneous goods and services & -34\\
+\cellcolor{gray!10}{g2} & \cellcolor{gray!10}{Food and non-alcoholic beverages} & \cellcolor{gray!10}{-18}\\
+g2 & Alcoholic beverages, tobacco & -1\\
+\cellcolor{gray!10}{g2} & \cellcolor{gray!10}{Clothing and footwear} & \cellcolor{gray!10}{12}\\
+\addlinespace
+g2 & Housing, water, electricity, gas & -12\\
+\cellcolor{gray!10}{g2} & \cellcolor{gray!10}{Furniture, household goods} & \cellcolor{gray!10}{13}\\
+g2 & Health & -10\\
+\cellcolor{gray!10}{g2} & \cellcolor{gray!10}{Transport} & \cellcolor{gray!10}{56}\\
+g2 & Communications & 4\\
+\addlinespace
+\cellcolor{gray!10}{g2} & \cellcolor{gray!10}{Recreation and culture} & \cellcolor{gray!10}{14}\\
+g2 & Education & -46\\
+\cellcolor{gray!10}{g2} & \cellcolor{gray!10}{Restaurants and hotels} & \cellcolor{gray!10}{22}\\
+g2 & Miscellaneous goods and services & 14\\
+\cellcolor{gray!10}{g3} & \cellcolor{gray!10}{Food and non-alcoholic beverages} & \cellcolor{gray!10}{24}\\
+\addlinespace
+g3 & Alcoholic beverages, tobacco & 2\\
+\cellcolor{gray!10}{g3} & \cellcolor{gray!10}{Clothing and footwear} & \cellcolor{gray!10}{13}\\
+g3 & Housing, water, electricity, gas & 18\\
+\cellcolor{gray!10}{g3} & \cellcolor{gray!10}{Furniture, household goods} & \cellcolor{gray!10}{17}\\
+g3 & Health & -1\\
+\addlinespace
+\cellcolor{gray!10}{g3} & \cellcolor{gray!10}{Transport} & \cellcolor{gray!10}{42}\\
+g3 & Communications & 9\\
+\cellcolor{gray!10}{g3} & \cellcolor{gray!10}{Recreation and culture} & \cellcolor{gray!10}{22}\\
+g3 & Education & 17\\
+\cellcolor{gray!10}{g3} & \cellcolor{gray!10}{Restaurants and hotels} & \cellcolor{gray!10}{18}\\
+\addlinespace
+g3 & Miscellaneous goods and services & 27\\
+\cellcolor{gray!10}{g4} & \cellcolor{gray!10}{Food and non-alcoholic beverages} & \cellcolor{gray!10}{30}\\
+g4 & Alcoholic beverages, tobacco & 3\\
+\cellcolor{gray!10}{g4} & \cellcolor{gray!10}{Clothing and footwear} & \cellcolor{gray!10}{0}\\
+g4 & Housing, water, electricity, gas & 6\\
+\addlinespace
+\cellcolor{gray!10}{g4} & \cellcolor{gray!10}{Furniture, household goods} & \cellcolor{gray!10}{-4}\\
+g4 & Health & 5\\
+\cellcolor{gray!10}{g4} & \cellcolor{gray!10}{Transport} & \cellcolor{gray!10}{2}\\
+g4 & Communications & 7\\
+\cellcolor{gray!10}{g4} & \cellcolor{gray!10}{Recreation and culture} & \cellcolor{gray!10}{-2}\\
+\addlinespace
+g4 & Education & 31\\
+\cellcolor{gray!10}{g4} & \cellcolor{gray!10}{Restaurants and hotels} & \cellcolor{gray!10}{-2}\\
+g4 & Miscellaneous goods and services & 5\\
+\cellcolor{gray!10}{g5} & \cellcolor{gray!10}{Food and non-alcoholic beverages} & \cellcolor{gray!10}{9}\\
+g5 & Alcoholic beverages, tobacco & 1\\
+\addlinespace
+\cellcolor{gray!10}{g5} & \cellcolor{gray!10}{Clothing and footwear} & \cellcolor{gray!10}{-10}\\
+g5 & Housing, water, electricity, gas & 20\\
+\cellcolor{gray!10}{g5} & \cellcolor{gray!10}{Furniture, household goods} & \cellcolor{gray!10}{-4}\\
+g5 & Health & 11\\
+\cellcolor{gray!10}{g5} & \cellcolor{gray!10}{Transport} & \cellcolor{gray!10}{-15}\\
+\addlinespace
+g5 & Communications & -1\\
+\cellcolor{gray!10}{g5} & \cellcolor{gray!10}{Recreation and culture} & \cellcolor{gray!10}{-7}\\
+g5 & Education & -7\\
+\cellcolor{gray!10}{g5} & \cellcolor{gray!10}{Restaurants and hotels} & \cellcolor{gray!10}{-9}\\
+g5 & Miscellaneous goods and services & -6\\
+\addlinespace
+\cellcolor{gray!10}{g6} & \cellcolor{gray!10}{Food and non-alcoholic beverages} & \cellcolor{gray!10}{-19}\\
+g6 & Alcoholic beverages, tobacco & -6\\
+\cellcolor{gray!10}{g6} & \cellcolor{gray!10}{Clothing and footwear} & \cellcolor{gray!10}{-19}\\
+g6 & Housing, water, electricity, gas & 4\\
+\cellcolor{gray!10}{g6} & \cellcolor{gray!10}{Furniture, household goods} & \cellcolor{gray!10}{-13}\\
+\addlinespace
+g6 & Health & 4\\
+\cellcolor{gray!10}{g6} & \cellcolor{gray!10}{Transport} & \cellcolor{gray!10}{-59}\\
+g6 & Communications & -15\\
+\cellcolor{gray!10}{g6} & \cellcolor{gray!10}{Recreation and culture} & \cellcolor{gray!10}{-26}\\
+g6 & Education & -49\\
+\addlinespace
+\cellcolor{gray!10}{g6} & \cellcolor{gray!10}{Restaurants and hotels} & \cellcolor{gray!10}{-28}\\
+g6 & Miscellaneous goods and services & -30\\
+\cellcolor{gray!10}{g7} & \cellcolor{gray!10}{Food and non-alcoholic beverages} & \cellcolor{gray!10}{-50}\\
+g7 & Alcoholic beverages, tobacco & -12\\
+\cellcolor{gray!10}{g7} & \cellcolor{gray!10}{Clothing and footwear} & \cellcolor{gray!10}{-25}\\
+\addlinespace
+g7 & Housing, water, electricity, gas & 2\\
+\cellcolor{gray!10}{g7} & \cellcolor{gray!10}{Furniture, household goods} & \cellcolor{gray!10}{-5}\\
+g7 & Health & 20\\
+\cellcolor{gray!10}{g7} & \cellcolor{gray!10}{Transport} & \cellcolor{gray!10}{-116}\\
+g7 & Communications & -23\\
+\addlinespace
+\cellcolor{gray!10}{g7} & \cellcolor{gray!10}{Recreation and culture} & \cellcolor{gray!10}{-33}\\
+g7 & Education & -71\\
+\cellcolor{gray!10}{g7} & \cellcolor{gray!10}{Restaurants and hotels} & \cellcolor{gray!10}{-44}\\
+g7 & Miscellaneous goods and services & -44\\
+\bottomrule
+\end{tabular}}
+\end{table}
+\end{document}
